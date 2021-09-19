@@ -1,3 +1,10 @@
 *config/
 *log/
 *media/
+/.idea/.gitignore
+/.idea/inhabas.com.iml
+/.idea/misc.xml
+/.idea/modules.xml
+/.idea/inspectionProfiles/profiles_settings.xml
+/.idea/inspectionProfiles/Project_Default.xml
+/.idea/vcs.xml
