@@ -2,12 +2,13 @@ import functools
 from django.contrib import messages
 from django.http import Http404
 from django.shortcuts import redirect, reverse, render
-from DB.models import User, ContestBoard, Board, Bank, Lect, UserDelete, AuthUser, History, LectEnrollment, \
+from DB.models import User, ContestBoard, Board, Bank, Lect, UserDelete, History, LectEnrollment, \
     LectBoard, Answer, UserEmail, Comment, LectAssignmentSubmit, Alarm, PolicyTerms, LectAttendance
 from allauth.socialaccount.models import SocialAccount, SocialToken
 from file_controller import FileController
 from django.db.models import Q
 from django.db import transaction
+from permission.models import AuthUser
 from post_controller import comment_delete_by_post_delete
 
 
@@ -49,9 +50,9 @@ def get_social_login_info(password):
             'profile_image')  # extra_data 테이블에서 꺼내는 변수를 profile_image로 설정
 
     # 소셜 로그인으로 부터 받은 정보는 저장하지 않기 위해 해당 정보 삭제
-    tar_token.delete()
-    tar_member.delete()
-    auth_user.delete()
+    # tar_token.delete()
+    # tar_member.delete()
+    # auth_user.delete()
 
     return social_login_info_dict
 

@@ -44,7 +44,7 @@ def choose_std_or_pro(request):  # 학생인지, 교수인지 고르게 하는 �
                                      provider=social_dict.get("provider"))
                 return redirect(reverse('index'))
     else:  # 파라미터가 제대로 넘어오지 않은 경우, 즉 비정상적인 경로를 통해 로그인 된 경우
-        return render(request, "index.html", {'lgn_is_failed': 1})  # 자바 스크립트 경고를 띄우기 위한 변수 지정 후 index로 보냄.
+        return redirect(request, "index.html", {'lgn_is_failed': 1})  # 자바 스크립트 경고를 띄우기 위한 변수 지정 후 index로 보냄.
 
 
 @user_recruit_check
@@ -187,6 +187,14 @@ def quest_chk(request):
 
 
 def pass_param(request):  # 구글 로그인으로 부터 파라미터를 받아 넘기는 페이지, 사용자에겐 보이지 않음.
+    # 소셜로그인 성공 && 기존 회원일 때
+    if request.user.is_authenticated and (exist_email := UserEmail.objects.filter(user_email=request.user.email)):
+        if not request.user.student_id:
+            request.user.student_id = exist_email.first().user_stu_id
+            request.user.save()
+
+    list(messages.get_messages(request))  # django allauth 에서 발생시키는 메세지 retrieve
+
     return render(request, "pass_login_param.html", {})
 
 
