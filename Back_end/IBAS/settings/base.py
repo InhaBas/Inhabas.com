@@ -70,6 +70,8 @@ INSTALLED_APPS = [
     'widget_tweaks',
     # 템플릿에서 산술연산을 하기 위한 앱
     'mathfilters',
+    # 권한관련
+    'permission',
     # 소셜 로그인 패키지: allauth 관련
     'allauth',
     'allauth.account',
@@ -89,7 +91,6 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    #'whitenoise.middleware.WhiteNoiseMiddleware',
 ]
 
 ROOT_URLCONF = 'IBAS.urls'
@@ -121,12 +122,6 @@ TEMPLATES = [
         },
     },
 ]
-
-
-#WSGI_APPLICATION = 'IBAS.wsgi.dev.application'
-# Database
-# https://docs.djangoproject.com/en/3.1/ref/settings/#databases
-
 
 DATABASES = {
         'default': env.db(),
@@ -177,7 +172,6 @@ STATICFILES_DIRS = [
     os.path.join(BASE_DIR, "static"),
 ]
 STATICFILES_STORAGE = 'IBAS.storage.StaticFilesMd5HashingStorage'
-# WHITENOISE_MANIFEST_STRICT = False  # 왜 안되지
 
 # social 로그인 패키지 설정
 AUTHENTICATION_BACKENDS = (
@@ -193,10 +187,17 @@ MEDIA_ROOT = os.path.join(BASE_DIR, '../media')
 MEDIA_URL = '/media/'
 
 # 소셜 로그인 관련 설정
-SITE_ID = 2
-LOGIN_REDIRECT_URL = '/user/pass'  # 로그인 성공시 리다이렉션 되는 URL 바꿀 필요가 있을 듯..
-ACCOUNT_EMAIL_REQUIRED = True  # 이메일은 꼭 받게 만들기.
-ACCOUNT_LOGOUT_ON_GET = True  # 로그 아웃 시 example.com사이트로 자동이동 하는 것 제거
+SITE_ID = 1
+LOGIN_REDIRECT_URL = '/user/pass'
+LOGIN_URL = '/user/login/'
+ACCOUNT_EMAIL_REQUIRED = True
+ACCOUNT_LOGOUT_ON_GET = True
+ACCOUNT_LOGOUT_REDIRECT_URL = "/"
+ACCOUNT_USER_MODEL_USERNAME_FIELD = None
+ACCOUNT_USERNAME_REQUIRED = False
+ACCOUNT_AUTHENTICATION_METHOD = 'email'
+AUTH_USER_MODEL = "permission.AuthUser"
+SESSION_ENGINE = 'django.contrib.sessions.backends.cached_db'
 
 # send email
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
@@ -224,27 +225,3 @@ SUMMERNOTE_CONFIG = {
 }
 
 SUMMERNOTE_THEME = 'bs3'
-
-# 로컬 개발 시 쿼리 확인 용
-# if os.getenv('env') not in ['production', 'dev']:
-#     LOGGING = {
-#         'version': 1,
-#         'filters': {
-#             'require_debug_true': {
-#                 '()': 'django.utils.log.RequireDebugTrue',
-#             }
-#         },
-#         'handlers': {
-#             'console': {
-#                 'level': 'DEBUG',
-#                 'filters': ['require_debug_true'],
-#                 'class': 'logging.StreamHandler',
-#             }
-#         },
-#         'loggers': {
-#             'django.db.backends': {
-#                 'level': 'DEBUG',
-#                 'handlers': ['console'],
-#             }
-#         }
-#     }
