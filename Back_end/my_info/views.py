@@ -1,10 +1,9 @@
-import json
 import os
 
 from django.http import JsonResponse
 from django.shortcuts import render, redirect, reverse
-from DB.models import Board, User, Comment, Bank, UserUpdateRequest, UserEmail, StateInfo, MajorInfo, Lect, \
-    LectEnrollment, BoardType
+from DB.models import Board, User, Comment, Bank, UserUpdateRequest, StateInfo, MajorInfo, Lect, \
+    LectEnrollment, UserSocialAccount
 from django.db.models import Q
 
 from alarm.alarm_controller import create_user_activate_alarm
@@ -43,9 +42,9 @@ def my_info(request):  # 내 정보 출력
         "user_list": User.objects.all(),
         "major_list": MajorInfo.objects.all(),
         "is_naver_existed": len(
-            UserEmail.objects.filter(Q(user_stu=get_logined_user(request)) & Q(provider="naver"))) != 0,
+            UserSocialAccount.objects.filter(Q(user_stu=get_logined_user(request)) & Q(provider="naver"))) != 0,
         "is_google_existed": len(
-            UserEmail.objects.filter(Q(user_stu=get_logined_user(request)) & Q(provider="google"))) != 0,
+            UserSocialAccount.objects.filter(Q(user_stu=get_logined_user(request)) & Q(provider="google"))) != 0,
     }
     return render(request, 'my_info.html', context)
 
@@ -164,8 +163,8 @@ def connect_social_account(request):
                 break
 
         if current_user is not None:
-            if len(UserEmail.objects.filter(user_email=social_dict.get("email"))) == 0:
-                UserEmail.objects.create(user_stu=current_user, user_email=social_dict.get("email"),
+            if len(UserSocialAccount.objects.filter(user_email=social_dict.get("email"))) == 0:
+                UserSocialAccount.objects.create(user_stu=current_user, user_email=social_dict.get("email"),
                                          provider=social_dict.get("provider"))
                 save_session(request, user_model=current_user, logined_email=social_dict.get("email"),
                              provider=social_dict.get("provider"))

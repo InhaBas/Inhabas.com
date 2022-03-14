@@ -1,13 +1,7 @@
-import json
-
 from django.shortcuts import render, redirect, get_object_or_404
-from allauth.socialaccount.models import SocialAccount, \
-    SocialToken  # 소셜 계정 DB, socialaccount_socialaccount 테이블을 사용하기 위함.
 from django.urls import reverse
-from DB.models import User, UserAuth, UserRole, QuestForm, Answer, UserEmail, \
-    MajorInfo, PolicyTerms,UserSchedule  # 전체 계정 DB, AuthUser 테이블을 사용하기 위함.
+from DB.models import User, UserAuth, UserRole, QuestForm, Answer, UserEmail, MajorInfo, PolicyTerms, UserSchedule
 from django.http import HttpResponseRedirect, JsonResponse
-# 내가 만든 세션 모듈 불러오기
 from . import session
 from urllib.request import urlretrieve  # 인터넷에 있는 파일 다운로드
 import os
@@ -19,7 +13,7 @@ from django.contrib import messages
 from alarm.alarm_controller import create_user_join_alarm
 from user_controller import get_default_pic_path
 
-# Create your views here.
+
 def choose_std_or_pro(request):  # 학생인지, 교수인지 고르게 하는 것.
     if request.method == "POST":  # POST로 온 요청의 경우, 즉 정상적인 요청인 경우
         if request.POST.get("password") is not None:  # pass페이지에서 password가 파라미터로 넘어왔을 경우, 즉 정상적으로 구글 로그인을 마친 경우
