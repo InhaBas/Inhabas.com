@@ -4,7 +4,7 @@ from django.http import Http404
 from django.shortcuts import redirect
 from DB.models import User, ContestBoard, Board, Bank, Lect, UserDelete, AuthUser, History, LectEnrollment, \
     LectBoard, Answer, Comment, LectAssignmentSubmit, Alarm, PolicyTerms, LectAttendance, UserSocialAccount
-from allauth.socialaccount.models import SocialAccount, SocialToken
+from allauth.socialaccount.models import SocialAccount
 from file_controller import FileController
 from django.db.models import Q
 from django.db import transaction
@@ -30,22 +30,21 @@ def get_real_name(name_str: str):
     return real_name
 
 
-# 소셜로그인으로부터 정보를 얻어오는 함수임
 def get_social_login_info(password):
-    auth_user = AuthUser.objects.filter(password=password).first()
-    # 있다면 social account에서 앞서서 Auth의 primary key를 통해 가입한 친구의 pk를 넣어서 조회
-    social_account = SocialAccount.objects.filter(user_id=auth_user.id).first()  # quesyset의 첫번째 자료. 즉 로그인한 인원의 인스턴스 변수
-    social_login_info_dict = dict()
 
-    # extra_data: 사용자의 동의를 통해 로그인 출처로 부터 얻은 사용자의 개인정보
-    social_login_info_dict["email"] = social_account.extra_data.get('email')  # 자동 완성을 위해 인스턴스 변수 설정
-    social_login_info_dict["name"] = get_real_name(social_account.extra_data.get('name'))  # 자동 완성을 위한 이름 설정
-    social_login_info_dict["provider"] = social_account.provider
-    if social_login_info_dict["provider"] == "google":  # 사용자가 구글을 통해 로그인 한 경우
-        social_login_info_dict["pic"] = social_account.extra_data.get('picture')  # extra_data 테이블에서 꺼내는 변수를 picture로 설정
-    elif social_login_info_dict["provider"] == "naver":  # 사용자가 네이버를 통해 로그인 한 경우
-        social_login_info_dict["pic"] = social_account.extra_data.get(
-            'profile_image')  # extra_data 테이블에서 꺼내는 변수를 profile_image로 설정
+    auth_user = AuthUser.objects.get(password=password)
+    social_account = SocialAccount.objects.get(user_id=auth_user.id)
+    social_login_info_dict = {
+        "email": social_account.extra_data.get('email'),
+        "name": get_real_name(social_account.extra_data.get('name')),
+        "uid": social_account.uid,
+        "provider": social_account.provider
+    }
+
+    if social_login_info_dict["provider"] == "google":
+        social_login_info_dict["pic"] = social_account.extra_data.get('picture')
+    elif social_login_info_dict["provider"] == "naver":
+        social_login_info_dict["pic"] = social_account.extra_data.get('profile_image')
 
     return social_login_info_dict
 

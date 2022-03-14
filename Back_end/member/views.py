@@ -1,6 +1,8 @@
+from allauth.socialaccount.models import SocialAccount
 from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse
-from DB.models import User, UserAuth, UserRole, QuestForm, Answer, UserEmail, MajorInfo, PolicyTerms, UserSchedule
+from DB.models import User, UserAuth, UserRole, QuestForm, Answer, MajorInfo, PolicyTerms, UserSchedule, \
+    UserSocialAccount, AuthUser
 from django.http import HttpResponseRedirect, JsonResponse
 from . import session
 from urllib.request import urlretrieve  # 인터넷에 있는 파일 다운로드
@@ -14,31 +16,37 @@ from alarm.alarm_controller import create_user_join_alarm
 from user_controller import get_default_pic_path
 
 
-def choose_std_or_pro(request):  # 학생인지, 교수인지 고르게 하는 것.
-    if request.method == "POST":  # POST로 온 요청의 경우, 즉 정상적인 요청인 경우
-        if request.POST.get("password") is not None:  # pass페이지에서 password가 파라미터로 넘어왔을 경우, 즉 정상적으로 구글 로그인을 마친 경우
-            user_token = request.POST.get("password")  # 토큰 정보를 받음
+def choose_std_or_pro(request):  # 학생인지, 교수인지 고르는 페이지. (회원가입 시작지점)
+
+    if request.method != "POST":
+        messages.warning(request, "비정상적인 접근입니다!")
+
+    elif request.POST.get("password") is None:
+        messages.warning(request, "소셜 로그인에 실패했습니다. 다시 시도해주세요!")
+
+    else:
+        user_token = request.POST.get("password")  # 토큰 정보를 받음
+        social_dict = None
+
+        try:
             social_dict = get_social_login_info(user_token)
-            # ------------------------------소셜 로그인으로 받은 정보 처리 끝---------------------------------------#
+            user_social_account = UserSocialAccount.objects.get(uid=social_dict.get("uid"),
+                                                                provider=social_dict.get("provider"))
+            session.save_session(request,
+                                 user_model=user_social_account.user_stu,
+                                 logined_email=user_social_account.email,
+                                 provider=user_social_account.provider)
 
-            # 토큰 정보로 USER DB를 검색 했을 때 나오는 유저 정보가 없을 경우, 즉 입부 신청하지 않은 유저의 경우
-
-            if len(UserEmail.objects.filter(user_email=social_dict.get("email"))) == 0:
-                if is_user_recruiting():
-                    context = social_dict
-                    return render(request, 'std_or_pro.html', context)
+        except UserSocialAccount.DoesNotExist:  # 입부되어있지 않은 유저
+            if is_user_recruiting():
+                return render(request, 'std_or_pro.html', social_dict)
+            else:
                 messages.warning(request, "입부 신청 기간이 아닙니다.")
-                return redirect("index")
-            else:  # 이미 입부신청 되어있는 유저의 경우
-                # tar_member에 유저 정보를 저장
-                user_email = UserEmail.objects.get(pk=social_dict.get("email"))
-                tar_member = user_email.user_stu
-                # 로그인 및 정보 출력에 필요한 정보를 세션에 저장
-                session.save_session(request, user_model=tar_member, logined_email=user_email.user_email,
-                                     provider=social_dict.get("provider"))
-                return redirect(reverse('index'))
-    else:  # 파라미터가 제대로 넘어오지 않은 경우, 즉 비정상적인 경로를 통해 로그인 된 경우
-        return render(request, "index.html", {'lgn_is_failed': 1})  # 자바 스크립트 경고를 띄우기 위한 변수 지정 후 index로 보냄.
+
+        except AuthUser.DoesNotExist or SocialAccount.DoesNotExist:
+            messages.warning(request, "소셜 로그인에 실패했습니다. 다시 시도해주세요!")
+
+    return redirect("index")
 
 
 @user_recruit_check
@@ -157,7 +165,7 @@ def quest_chk(request):
                 user_phone=user_phone,  # 핸드폰 번호
                 user_pic=user_pic  # 프로필 사진
             )
-            UserEmail.objects.create(
+            UserSocialAccount.objects.create(
                 user_email=user_email,
                 provider=provider,
                 user_stu=user
