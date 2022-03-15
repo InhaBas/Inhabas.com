@@ -52,13 +52,14 @@ def choose_std_or_pro(request):  # 학생인지, 교수인지 고르는 페이�
 @user_recruit_check
 def join(request):  # 회원 가입 페이지를 랜더링 하는 함수
     if request.method == "POST":
-        user_role = request.POST.get("user_role")
+
         context = {  # hidden을 통해서 받은 회원들의 정보를 받아서 붙여넣음.
-            "email": request.POST.get("email"),  # 이메일
-            "name": request.POST.get("name"),  # 이름
-            "pic": request.POST.get("pic"),  # 프로필 사진
+            "email": request.POST.get("email"),
+            "name": request.POST.get("name"),
+            "pic": request.POST.get("pic"),
             "provider": request.POST.get("provider"),
-            "user_role": user_role,  # 회원 역할 (학생 or 교수)
+            "uid": request.POST.get("uid"),
+            "user_role": request.POST.get("user_role"),  # 회원 역할 (학생 or 교수)
             "quest_list": QuestForm.objects.all(),  # 질문 양식
             "major_list": MajorInfo.objects.all()  # 전공 리스트(전공 검색을 위해)
         }
@@ -91,7 +92,6 @@ def join_chk(request):  # 회원 가입 페이지로 부터 정보를 받
         # 사용자 정보를 받아옴
 
         context = {  # 회원 가입 정보를 받아서 질문 폼으로 전송
-            "user_auth": request.POST.get("user_auth"),
             "user_role": request.POST.get("user_role"),
             "user_email": request.POST.get("user_email"),
             "user_major": request.POST.get("user_major"),
@@ -101,6 +101,7 @@ def join_chk(request):  # 회원 가입 페이지로 부터 정보를 받
             "user_phone": request.POST.get("user_phone"),
             "user_pic": request.POST.get("user_pic"),
             "provider": request.POST.get("provider"),
+            "uid": request.POST.get("uid"),
             "quest_list": QuestForm.objects.all()
         }
         # 질문/답변 폼으로 보냄
@@ -111,10 +112,10 @@ def join_chk(request):  # 회원 가입 페이지로 부터 정보를 받
 
 @user_recruit_check
 def quest_chk(request):
-    if request.method == "POST":  # POST로 데이터가 들어왔을 경우, 안들어 왔다면 -> 비정상 적인 접근임. 일반적으로 GET을 통해서는 접근이 불가능 해야함.
-        # 사용자 정보를 받아옴
-        user_auth = request.POST.get("user_auth")
-        user_role = request.POST.get("user_role")
+    if request.method == "POST":  # POST로 데이터가 들어왔을 경우, 안들어 왔다면 -> 비정상적인 접근임. 일반적으로 GET을 통해서는 접근이 불가능 해야함.
+
+        user_auth = 3
+        user_role = 5 if request.POST.get("user_role") == "professor" else 6
         user_email = request.POST.get("user_email")
         user_major = MajorInfo.objects.filter(major_name=request.POST.get("user_major"))[0]
         user_name = request.POST.get("user_name")
@@ -124,10 +125,13 @@ def quest_chk(request):
         user_phone = request.POST.get("user_phone")
         user_pic = request.POST.get("user_pic")
         provider = request.POST.get("provider")
-        if len(User.objects.filter(
-                user_stu=user_stu)) != 0:  # 중복 방지 로직. 이미 등록되어 있다면 DB등록 전에 세션등록을 하고 리다이렉션 함. 우선 이게 최선인듯.
-            session.save_session(request, user_model=User.objects.get(pk=user_stu), logined_email=user_email,
-                                 provider=provider)  # 자동 로그인을 위해 세션 등록
+        uid = request.POST.get("uid")
+
+        if UserSocialAccount.objects.filter(user_id=user_stu, provider=provider, uid=uid).count():  # 중복 방지
+            session.save_session(request,
+                                 user_model=User.objects.get(pk=user_stu),
+                                 logined_email=user_email,
+                                 provider=provider)
             return redirect("welcome")
 
         if user_pic is not None:
@@ -149,9 +153,6 @@ def quest_chk(request):
                     user_pic = get_default_pic_path()
             except:
                 user_pic = get_default_pic_path()
-                pass
-        # 받은 정보로 user 모델 인스턴스 변수 생성
-        # 사용자 정보를 DB에 저장
 
         with transaction.atomic():
             user = User.objects.create(
@@ -166,11 +167,12 @@ def quest_chk(request):
                 user_pic=user_pic  # 프로필 사진
             )
             UserSocialAccount.objects.create(
-                user_email=user_email,
+                email=user_email,
                 provider=provider,
-                user_stu=user
+                user=user,
+                uid=uid
             )
-            if user_role == "6":  # 오직 일반 학생으로 가입했을 때만
+            if user_role == 6:  # 오직 일반 학생으로 가입했을 때만
                 # 모든 질문 리스트를 뽑아옴: 질문이 몇번까지 있는지 알아야 답변을 몇번까지 했는지 알기 때문
                 quest_list = QuestForm.objects.all()
                 # 질문에 대한 답변을 저장하는 곳
@@ -180,11 +182,12 @@ def quest_chk(request):
                         answer_cont=request.POST.get("answer_" + str(quest.quest_no)),
                         answer_user=user,
                     )
-            session.save_session(request, user_model=user, logined_email=user_email,
-                                 provider=provider)  # 자동 로그인을 위해 세션 등록
+            session.save_session(request, user_model=user, logined_email=user_email, provider=provider)  # 로그인
             # 새로운 유저 가입을 회장단에게 알림.
             create_user_join_alarm(user)
+
         return redirect(reverse("welcome"))  # 정상 회원가입 완료시 회원 가입 완료 페이지로 이동.
+
     return render(request, "index.html", {'lgn_is_failed': 1})  # 비정상 적인 접근 시 로그인 실패 메시지 출력과 함께 메인페이지 이동.
 
 
