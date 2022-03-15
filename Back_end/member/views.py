@@ -16,6 +16,11 @@ from alarm.alarm_controller import create_user_join_alarm
 from user_controller import get_default_pic_path
 
 
+def check_required_consent_fields(social_dict):
+    if social_dict["email"] is None:
+        raise AttributeError('no email')
+
+
 def choose_std_or_pro(request):  # 학생인지, 교수인지 고르는 페이지. (회원가입 시작지점)
 
     if request.method != "POST":
@@ -32,12 +37,14 @@ def choose_std_or_pro(request):  # 학생인지, 교수인지 고르는 페이�
             social_dict = get_social_login_info(user_token)
             user_social_account = UserSocialAccount.objects.get(uid=social_dict.get("uid"),
                                                                 provider=social_dict.get("provider"))
+            check_required_consent_fields(social_dict)
+
             session.save_session(request,
                                  user_model=user_social_account.user,
                                  logined_email=user_social_account.email,
                                  provider=user_social_account.provider)
 
-        except UserSocialAccount.DoesNotExist:  # 입부되어있지 않은 유저
+        except UserSocialAccount.DoesNotExist:
             if is_user_recruiting():
                 return render(request, 'std_or_pro.html', social_dict)
             else:
@@ -45,6 +52,9 @@ def choose_std_or_pro(request):  # 학생인지, 교수인지 고르는 페이�
 
         except AuthUser.DoesNotExist or SocialAccount.DoesNotExist:
             messages.warning(request, "소셜 로그인에 실패했습니다. 다시 시도해주세요!")
+
+        except AttributeError:
+            messages.warning(request, "소셜로그인 필수 동의 항목 값을 불러올 수 없습니다. 소셜 계정에서 관련 설정을 변경해주세요!")
 
     return redirect("index")
 
