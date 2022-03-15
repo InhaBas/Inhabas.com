@@ -16,9 +16,35 @@ from alarm.alarm_controller import create_user_join_alarm
 from user_controller import get_default_pic_path
 
 
+# util
 def check_required_consent_fields(social_dict):
     if social_dict["email"] is None:
         raise AttributeError('no email')
+
+
+# @PendingDeprecationWarning
+def user_has_already_joined(request, social_dict) -> bool:
+    """
+        기존에는 OAuth2 인증 후, 해당 이메일과 회원 학번을 연결하여 회원가입된 유저인지 확인했었다.
+        하지만 naver oauth2 의 경우 사용자 연락처 이메일을 변경할 수 있음이 발견되어,
+        (provider, uid) 로 소셜계정을 구분하도록 변경했다.
+        이미 회원이지만 이 변경사항 적용 후에 아직 uid 가 매핑되지 않은 회원이 존재할 수 있다.
+        따라서 호환성을 위해 email 로 소셜 계정을 한번 더 찾고, 있을 경우 uid 를 추가하도록 했다.
+
+        https://github.com/InhaBas/Inhabas.com/issues/102
+    """
+    if user_social_account := UserSocialAccount.objects.select_related("user") \
+            .filter(email=social_dict.get("email"), provider=social_dict.get("provider")).first():
+        user_social_account.uid = social_dict.get("uid")
+        user_social_account.save()
+
+        session.save_session(request,
+                             user_model=user_social_account.user,
+                             logined_email=user_social_account.email,
+                             provider=user_social_account.provider)
+        return True
+
+    return False
 
 
 def choose_std_or_pro(request):  # 학생인지, 교수인지 고르는 페이지. (회원가입 시작지점)
@@ -35,9 +61,10 @@ def choose_std_or_pro(request):  # 학생인지, 교수인지 고르는 페이�
         social_dict = None
         try:
             social_dict = get_social_login_info(user_token)
-            user_social_account = UserSocialAccount.objects.get(uid=social_dict.get("uid"),
-                                                                provider=social_dict.get("provider"))
             check_required_consent_fields(social_dict)
+
+            user_social_account = UserSocialAccount.objects.select_related("user") \
+                .get(uid=social_dict.get("uid"), provider=social_dict.get("provider"))
 
             session.save_session(request,
                                  user_model=user_social_account.user,
@@ -45,10 +72,13 @@ def choose_std_or_pro(request):  # 학생인지, 교수인지 고르는 페이�
                                  provider=user_social_account.provider)
 
         except UserSocialAccount.DoesNotExist:
-            if is_user_recruiting():
-                return render(request, 'std_or_pro.html', social_dict)
-            else:
-                messages.warning(request, "입부 신청 기간이 아닙니다.")
+
+            if not user_has_already_joined(request, social_dict):
+
+                if is_user_recruiting():
+                    return render(request, 'std_or_pro.html', social_dict)
+                else:
+                    messages.warning(request, "입부 신청 기간이 아닙니다.")
 
         except AuthUser.DoesNotExist or SocialAccount.DoesNotExist:
             messages.warning(request, "소셜 로그인에 실패했습니다. 다시 시도해주세요!")
