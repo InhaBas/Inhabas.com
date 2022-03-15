@@ -596,7 +596,7 @@ class UserSocialAccount(models.Model):
     email = models.CharField(max_length=100, db_column="USER_EMAIL")
     provider = models.CharField(max_length=20, db_column="PROVIDER")
     uid = models.CharField(max_length=191, db_column="UID")
-    user_stu = models.ForeignKey(User, on_delete=models.CASCADE, db_column='USER_STU')
+    user = models.ForeignKey(User, on_delete=models.CASCADE, db_column='USER_STU')
 
     class Meta:
         managed = False

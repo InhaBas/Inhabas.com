@@ -26,14 +26,14 @@ def choose_std_or_pro(request):  # 학생인지, 교수인지 고르는 페이�
 
     else:
         user_token = request.POST.get("password")  # 토큰 정보를 받음
-        social_dict = None
 
+        social_dict = None
         try:
             social_dict = get_social_login_info(user_token)
             user_social_account = UserSocialAccount.objects.get(uid=social_dict.get("uid"),
                                                                 provider=social_dict.get("provider"))
             session.save_session(request,
-                                 user_model=user_social_account.user_stu,
+                                 user_model=user_social_account.user,
                                  logined_email=user_social_account.email,
                                  provider=user_social_account.provider)
 

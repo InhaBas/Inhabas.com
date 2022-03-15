@@ -25,7 +25,7 @@ from exception_handler import exist_check
 # 모델에 따른 이메일 리스트를 불러오는 함수
 def get_email_list(user_model):
 
-    return [social_account.email for social_account in UserSocialAccount.objects.filter(user_stu=user_model)]
+    return [social_account.email for social_account in UserSocialAccount.objects.filter(user=user_model)]
 
 
 def _get_exist_member_list(cur_user):
