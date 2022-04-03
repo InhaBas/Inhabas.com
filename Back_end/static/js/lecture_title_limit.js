@@ -8,8 +8,8 @@ window.onload = function () {
         var lectTitle = document.getElementsByClassName("lectTitle")[j].innerHTML;
 
         // 게시글 제목이 23보다 길면 ...붙임
-        if (lectTitle.length >= 23) {
-            lectTitle = lectTitle.substr(0, 23) + "...";
+        if (lectTitle.length >= 20) {
+            lectTitle = lectTitle.substr(0, 20) + "...";
             document.getElementsByClassName("lectTitle")[j].innerHTML = lectTitle
         }
 
