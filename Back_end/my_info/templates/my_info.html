@@ -417,10 +417,10 @@
                                                                             {{ my_lect_made.lect_deadline|date:"d" }}</strong>
 
                                                                         {% if my_lect_made.lect_state.state_no == 4 %}
-                                                                            <span class="recruiting-end">종료</span>
+                                                                            <span class="recruiting-wait">종료</span>
                                                                         {% elif my_lect_made.lect_state.state_no == 3 %}
                                                                             {% if my_lect_made.is_expired %}
-                                                                                <span class="recruiting-ing">마감</span>
+                                                                                <span class="recruiting-end">마감</span>
                                                                             {% else %}
                                                                                 <span class="recruiting">모집</span>
                                                                             {% endif %}
