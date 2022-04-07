@@ -175,8 +175,8 @@
                                                                         {% if my_lect_ing.lect_state.state_no == 4 %}
                                                                             <span class="recruiting-wait">종료</span>
                                                                         {% elif my_lect_ing.lect_state.state_no == 3 %}
-                                                                            {% if my_lect_ing.is_expired %}\
-                                                                                <span class="recruiting-end">마감</span>
+                                                                            {% if my_lect_ing.is_expired %}
+                                                                                <span class="recruiting-ing">진행</span>
                                                                             {% else %}
                                                                                 <span class="recruiting">모집</span>
                                                                             {% endif %}
@@ -298,7 +298,7 @@
                                                                             <span class="recruiting-wait">종료</span>
                                                                         {% elif my_lect_fin.lect_state.state_no == 3 %}
                                                                             {% if my_lect_fin.is_expired %}
-                                                                                <span class="recruiting-end">마감</span>
+                                                                                <span class="recruiting-ing">진행</span>
                                                                             {% else %}
                                                                                 <span class="recruiting">모집</span>
                                                                             {% endif %}
@@ -420,7 +420,7 @@
                                                                             <span class="recruiting-wait">종료</span>
                                                                         {% elif my_lect_made.lect_state.state_no == 3 %}
                                                                             {% if my_lect_made.is_expired %}
-                                                                                <span class="recruiting-end">마감</span>
+                                                                                <span class="recruiting-ing">진행</span>
                                                                             {% else %}
                                                                                 <span class="recruiting">모집</span>
                                                                             {% endif %}

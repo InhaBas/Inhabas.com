@@ -117,7 +117,7 @@
                                                     {% if lect.lect_state_id == 4 %}
                                                         <span class="recruiting-wait">종료</span>
                                                     {% elif lect.is_expired or lect.lect_limit_num <= lect.get_enrolled_std_num %}
-                                                        <span class="recruiting-end">마감</span>
+                                                        <span class="recruiting-ing">진행</span>
                                                     {% else %}
                                                         <span class="recruiting">모집</span>
                                                     {% endif %}
