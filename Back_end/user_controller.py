@@ -485,7 +485,7 @@ def member_only(superuser=False):
 
 # 디폴트 프로필 사진의 경로를 얻어옴
 def get_default_pic_path():
-    return "member/default/default.png"
+    return '{% static "member/default/default.png" %}'
 
 
 # 기존의 이미지 패스가 디폴트 패스인지 검사
